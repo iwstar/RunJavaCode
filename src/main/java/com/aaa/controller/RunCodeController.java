@@ -51,6 +51,7 @@ public class RunCodeController {
 
 			File f = new File(filePath + fileName + ".java");
 			BufferedReader br = null;
+			BufferedReader br1 = null;
 			try {
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 				bw.write(code);
@@ -58,7 +59,22 @@ public class RunCodeController {
 				Runtime runtime = Runtime.getRuntime();
 				// Thread.sleep(2000);
 				Process p0 = runtime.exec("javac " + filePath + fileName + ".java");
-				p0.waitFor();
+				//p0.waitFor();
+				br1 = new BufferedReader(new InputStreamReader(p0.getErrorStream()));
+				String line1 =null;
+				StringBuilder sb1 = new StringBuilder();
+				while ((line1 = br1.readLine()) != null) {
+					sb1.append(line1 + "\n");
+				}
+				System.out.println(sb1.toString().length()+"---"+sb1.toString());
+				if(sb1.toString().length()>5){
+					response.setCharacterEncoding("utf-8");
+					response.setContentType("text/html; charset=utf-8");
+					PrintWriter printWriter = response.getWriter();
+					printWriter.write(sb1.toString());
+					br1.close();
+					return;
+				}
 				Process p = runtime.exec("java -classpath " + filePath + " " + fileName);
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				String line = null;
@@ -66,6 +82,7 @@ public class RunCodeController {
 				while ((line = br.readLine()) != null) {
 					sb.append(line + "\n");
 				}
+				br.close();
 				log.info(sb.toString());
 				response.setCharacterEncoding("utf-8");
 				response.setContentType("text/html; charset=utf-8");
@@ -74,13 +91,6 @@ public class RunCodeController {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} finally {
-				try {
-					br.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 			}
 		} else {
 			try {
